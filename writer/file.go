@@ -22,11 +22,6 @@ func init() {
 	if dir, err := os.Getwd(); err == nil {
 		DefaultFileWithRotationOptions.Location = filepath.Join(dir, "logs")
 	}
-
-	// 创建目录
-	if err := os.MkdirAll(DefaultFileWithRotationOptions.Location, os.ModePerm); err != nil {
-		fmt.Println("无法创建目录:", err)
-	}
 }
 
 func NewFile() *FileWrite {
@@ -38,6 +33,11 @@ func NewFile() *FileWrite {
 func (w *FileWrite) Write(data []byte, level levels.Level) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
+
+	// 创建目录
+	if err := os.MkdirAll(DefaultFileWithRotationOptions.Location, os.ModePerm); err != nil {
+		fmt.Println("无法创建目录:", err)
+	}
 
 	fileName := fmt.Sprintf("%s.txt", time.Now().Format("2006-01-02"))
 
