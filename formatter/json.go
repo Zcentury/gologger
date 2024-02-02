@@ -14,11 +14,9 @@ func init() {
 
 func (j *JSON) Format(event *LogEvent) ([]byte, error) {
 	data := make(map[string]interface{})
-	if label, ok := event.Metadata["label"]; ok {
-		if label != "" {
-			data["level"] = label
-			delete(event.Metadata, "label")
-		}
+	if label, ok := event.Metadata["label"]; ok && label != "" {
+		data["level"] = label
+		delete(event.Metadata, "label")
 	}
 	for k, v := range event.Metadata {
 		data[k] = v

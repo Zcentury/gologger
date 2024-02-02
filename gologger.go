@@ -18,22 +18,22 @@ var (
 		levels.LevelDebug:   "DBG",
 	}
 
-	LoggerOptions *logger
+	LoggerOptions *Logger
 )
 
 func init() {
-	LoggerOptions = &logger{}
+	LoggerOptions = &Logger{}
 	LoggerOptions.SetFormatter(formatter.NewCLI(true))
 	LoggerOptions.SetWriter(writer.NewCLI())
 }
 
-type logger struct {
+type Logger struct {
 	writer    writer.Writer       // 输出接口
 	formatter formatter.Formatter // 格式化接口
 	timestamp bool                // 是否自动加入时间戳
 }
 
-func (l *logger) Log(event *event) {
+func (l *Logger) Log(event *Event) {
 	event.message = strings.TrimSuffix(event.message, "\n")
 	data, err := l.formatter.Format(&formatter.LogEvent{
 		Message:  event.message,
@@ -47,33 +47,33 @@ func (l *logger) Log(event *event) {
 }
 
 // SetFormatter 设置格式化方法
-func (l *logger) SetFormatter(formatter formatter.Formatter) {
+func (l *Logger) SetFormatter(formatter formatter.Formatter) {
 	l.formatter = formatter
 }
 
 // SetWriter 设置输出方法
-func (l *logger) SetWriter(writer writer.Writer) {
+func (l *Logger) SetWriter(writer writer.Writer) {
 	l.writer = writer
 }
 
 // SetTimestamp 是否自动添加时间戳
-func (l *logger) SetTimestamp(timestamp bool) {
+func (l *Logger) SetTimestamp(timestamp bool) {
 	l.timestamp = timestamp
 }
 
-type event struct {
-	logger   *logger
+type Event struct {
+	logger   *Logger
 	level    levels.Level
 	message  string
 	metadata map[string]string
 }
 
-func newDefaultEventWithLevel(level levels.Level) *event {
+func newDefaultEventWithLevel(level levels.Level) *Event {
 	return newEventWithLevelAndLogger(level, LoggerOptions)
 }
 
-func newEventWithLevelAndLogger(level levels.Level, l *logger) *event {
-	event := &event{
+func newEventWithLevelAndLogger(level levels.Level, l *Logger) *Event {
+	event := &Event{
 		logger:   l,
 		level:    level,
 		metadata: make(map[string]string),
@@ -84,60 +84,60 @@ func newEventWithLevelAndLogger(level levels.Level, l *logger) *event {
 	return event
 }
 
-func (e *event) setLevelMetadata(level levels.Level) {
+func (e *Event) setLevelMetadata(level levels.Level) {
 	e.metadata["label"] = labels[level]
 }
 
-func (e *event) Label(label string) *event {
+func (e *Event) Label(label string) *Event {
 	e.metadata["label"] = label
 	return e
 }
 
-func (e *event) TimeStamp() *event {
+func (e *Event) TimeStamp() *Event {
 	e.metadata["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
 	return e
 }
 
-func (e *event) Str(key, value string) *event {
+func (e *Event) Str(key, value string) *Event {
 	e.metadata[key] = value
 	return e
 }
 
-func (e *event) Msg(message string) {
+func (e *Event) Msg(message string) {
 	e.message = message
 	e.logger.Log(e)
 }
 
-func (e *event) Msgf(format string, args ...interface{}) {
+func (e *Event) Msgf(format string, args ...interface{}) {
 	e.message = fmt.Sprintf(format, args...)
 	e.logger.Log(e)
 }
 
-func Fatal() *event {
+func Fatal() *Event {
 	event := newDefaultEventWithLevel(levels.LevelFatal)
 	event.setLevelMetadata(levels.LevelFatal)
 	return event
 }
 
-func Error() *event {
+func Error() *Event {
 	event := newDefaultEventWithLevel(levels.LevelError)
 	event.setLevelMetadata(levels.LevelError)
 	return event
 }
 
-func Info() *event {
+func Info() *Event {
 	event := newDefaultEventWithLevel(levels.LevelInfo)
 	event.setLevelMetadata(levels.LevelInfo)
 	return event
 }
 
-func Warning() *event {
+func Warning() *Event {
 	event := newDefaultEventWithLevel(levels.LevelWarning)
 	event.setLevelMetadata(levels.LevelWarning)
 	return event
 }
 
-func Debug() *event {
+func Debug() *Event {
 	event := newDefaultEventWithLevel(levels.LevelDebug)
 	event.setLevelMetadata(levels.LevelDebug)
 	return event

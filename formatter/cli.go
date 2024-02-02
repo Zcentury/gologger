@@ -3,7 +3,7 @@ package formatter
 import (
 	"bytes"
 	"github.com/Zcentury/gologger/levels"
-	"github.com/fatih/color"
+	"github.com/logrusorgru/aurora/v4"
 )
 
 type CLI struct {
@@ -22,22 +22,22 @@ func (c *CLI) Format(event *LogEvent) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	buffer.Grow(len(event.Message))
 
-	label, ok := event.Metadata["label"]
-	if label != "" && ok {
+	if label, ok := event.Metadata["label"]; label != "" && ok {
 		buffer.WriteRune('[')
 		buffer.WriteString(label)
 		buffer.WriteRune(']')
 		buffer.WriteRune(' ')
 		delete(event.Metadata, "label")
 	}
-	timestamp, ok := event.Metadata["timestamp"]
-	if timestamp != "" && ok {
+
+	if timestamp, ok := event.Metadata["timestamp"]; timestamp != "" && ok {
 		buffer.WriteRune('[')
-		buffer.WriteString(color.GreenString(timestamp))
+		buffer.WriteString(aurora.Bold(aurora.Green(timestamp)).String())
 		buffer.WriteRune(']')
 		buffer.WriteRune(' ')
 		delete(event.Metadata, "timestamp")
 	}
+
 	buffer.WriteString(event.Message)
 
 	for k, v := range event.Metadata {
@@ -57,14 +57,14 @@ func (c *CLI) colorizeLabel(event *LogEvent) {
 	}
 	switch event.Level {
 	case levels.LevelInfo:
-		event.Metadata["label"] = color.New(color.BgGreen, color.FgWhite).Sprint(" " + label + " ")
+		event.Metadata["label"] = aurora.Bold(aurora.BgGreen(" " + label + " ")).String()
 	case levels.LevelFatal:
-		event.Metadata["label"] = color.New(color.BgMagenta, color.FgWhite).Sprint(" " + label + " ")
+		event.Metadata["label"] = aurora.Bold(aurora.BgMagenta(" " + label + " ")).String()
 	case levels.LevelError:
-		event.Metadata["label"] = color.New(color.BgRed, color.FgWhite).Sprint(" " + label + " ")
+		event.Metadata["label"] = aurora.Bold(aurora.BgRed(" " + label + " ")).String()
 	case levels.LevelDebug:
-		event.Metadata["label"] = color.New(color.BgBlue, color.FgWhite).Sprint(" " + label + " ")
+		event.Metadata["label"] = aurora.Bold(aurora.BgBlue(" " + label + " ")).String()
 	case levels.LevelWarning:
-		event.Metadata["label"] = color.New(color.BgYellow, color.FgWhite).Sprint(" " + label + " ")
+		event.Metadata["label"] = aurora.Bold(aurora.BgYellow(" " + label + " ")).String()
 	}
 }
